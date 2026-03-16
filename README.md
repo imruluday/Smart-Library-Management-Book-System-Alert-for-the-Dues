@@ -1,4 +1,12 @@
 # Smart-Library-Management-Book-System-Alert-for-the-Dues
+##Group Name: Team Tech
+
+## Project Members
+
+1. Gazi Shariar Alam – 2232629042
+2. Imrul Kayes Uday – 2231002042
+3. Maisha Subat – 2231161042
+   
 
 ## Course
 Software Engineering
@@ -18,11 +26,6 @@ A special feature of this system is the **Due Alert Notification System**, which
  Due Alert Notification System
  Book Search System
 
-## Project Members
-
-1. Gazi Shariar Alam – 2232629042
-2. Imrul Kayes Uday – 2231002042
-3. Maisha Subat – 2231161042
 
 ## Future Improvements
 
