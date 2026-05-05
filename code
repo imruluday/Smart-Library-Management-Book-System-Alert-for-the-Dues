@@ -1,0 +1,424 @@
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
+// 1. SINGLETON
+
+class DatabaseConnection {
+    private static DatabaseConnection instance;
+
+    private DatabaseConnection() {
+        System.out.println("Database Connected...");
+    }
+
+    public static DatabaseConnection getInstance() {
+        if (instance == null) {
+            instance = new DatabaseConnection();
+        }
+        return instance;
+    }
+}
+
+//  2. FACTORY (Book)
+
+abstract class Book {
+    protected String title;
+    protected double price;
+    protected boolean available = true;
+
+    public Book(String title, double price) {
+        this.title = title;
+        this.price = price;
+    }
+
+    public String getTitle() { return title; }
+    public double getPrice() { return price; }
+    public boolean isAvailable() { return available; }
+
+    public void setAvailable(boolean status) {
+        this.available = status;
+    }
+
+    public void displayDetails() {
+        System.out.println(" " + title + " | Price: " + price + " | Available: " + available);
+    }
+}
+
+class NovelBook extends Book {
+    public NovelBook(String title, double price) {
+        super(title, price);
+    }
+}
+
+class BookFactory {
+    public static Book createBook(String type, String title, double price) {
+        return new NovelBook(title, price);
+    }
+}
+
+// 3. STRATEGY (Fine)
+
+interface FineStrategy {
+    double calculateFine(long lateDays);
+}
+
+class RegularFineStrategy implements FineStrategy {
+    public double calculateFine(long lateDays) {
+        return lateDays * 5;
+    }
+}
+
+// 4. OBSERVER (Notification)
+
+interface Observer {
+    void update(String message);
+}
+
+class NotificationService {
+    private List<Observer> observers = new ArrayList<>();
+
+    public void subscribe(Observer o) {
+        observers.add(o);
+    }
+
+    public void notifyUsers(String msg) {
+        for (Observer o : observers) {
+            o.update(msg);
+        }
+    }
+}
+
+
+// USER
+
+class User implements Observer {
+    protected String email;
+    protected String password;
+
+    public User(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
+    public String getEmail() { return email; }
+
+    public boolean login(String email, String password) {
+        return this.email.equals(email) && this.password.equals(password);
+    }
+
+    @Override
+    public void update(String message) {
+        System.out.println("" + email + " -> " + message);
+    }
+
+    public int getBorrowLimit() {
+        return 2;
+    }
+}
+
+//5. DECORATOR (Premium)
+
+abstract class UserDecorator extends User {
+    protected User user;
+
+    public UserDecorator(User user) {
+        super(user.email, user.password);
+        this.user = user;
+    }
+}
+
+class PremiumUser extends UserDecorator {
+    public PremiumUser(User user) {
+        super(user);
+    }
+
+    @Override
+    public int getBorrowLimit() {
+        return 5;
+    }
+}
+
+//ADMIN
+
+class Admin extends User {
+
+    public Admin(String email, String password) {
+        super(email, password);
+    }
+
+    public void addBook(LibrarySystem lib, Book book) {
+        lib.addBook(book);
+        System.out.println(" Admin added: " + book.getTitle());
+    }
+
+    public void removeBook(LibrarySystem lib, String title) {
+        lib.removeBook(title);
+        System.out.println(" Admin removed: " + title);
+    }
+
+    public void viewUsers(LibrarySystem lib) {
+        lib.showUsers();
+    }
+}
+
+//  6. PROXY (Login)
+
+class LibraryProxy {
+    private User user;
+
+    public LibraryProxy(User user) {
+        this.user = user;
+    }
+
+    public boolean authenticate(String email, String password) {
+        if (user.login(email, password)) {
+            System.out.println(" Login Successful");
+            return true;
+        } else {
+            System.out.println(" Login Failed");
+            return false;
+        }
+    }
+}
+
+
+// BORROW RECORD
+
+class BorrowRecord {
+    Book book;
+    LocalDate borrowDate;
+    LocalDate dueDate;
+
+    public BorrowRecord(Book book) {
+        this.book = book;
+        this.borrowDate = LocalDate.now();
+        this.dueDate = borrowDate.plusDays(15);
+    }
+}
+
+// LIBRARY SYSTEM
+
+class LibrarySystem {
+    private List<Book> books = new ArrayList<>();
+    private List<User> users = new ArrayList<>();
+    private Map<User, List<BorrowRecord>> borrowMap = new HashMap<>();
+
+    private NotificationService notifier = new NotificationService();
+    private FineStrategy fineStrategy = new RegularFineStrategy();
+
+    public void registerUser(User user) {
+        users.add(user);
+        borrowMap.put(user, new ArrayList<>());
+        notifier.subscribe(user);
+        System.out.println("Registered: " + user.getEmail());
+    }
+
+    public void addBook(Book book) {
+        books.add(book);
+    }
+
+    public void removeBook(String title) {
+        books.removeIf(b -> b.getTitle().equalsIgnoreCase(title));
+    }
+
+    public void showAllBooks() {
+        for (Book b : books) {
+            b.displayDetails();
+        }
+    }
+
+    public void showUsers() {
+        for (User u : users) {
+            System.out.println("👤 " + u.getEmail());
+        }
+    }
+
+    public void borrowBook(User user, String title) {
+        List<BorrowRecord> records = borrowMap.get(user);
+
+        if (records.size() >= user.getBorrowLimit()) {
+            System.out.println("⚠ Borrow limit exceeded");
+            return;
+        }
+
+        for (Book book : books) {
+            if (book.getTitle().equalsIgnoreCase(title) && book.isAvailable()) {
+                book.setAvailable(false);
+                BorrowRecord record = new BorrowRecord(book);
+                records.add(record);
+
+                System.out.println(" Borrowed: " + book.getTitle());
+                System.out.println(" Due Date: " + record.dueDate);
+                return;
+            }
+        }
+        System.out.println("❌ Book not available");
+    }
+
+    public void returnBook(User user, String title) {
+        List<BorrowRecord> records = borrowMap.get(user);
+
+        for (BorrowRecord r : records) {
+            if (r.book.getTitle().equalsIgnoreCase(title)) {
+
+                long lateDays = ChronoUnit.DAYS.between(r.dueDate, LocalDate.now());
+
+                if (lateDays > 0) {
+                    double fine = fineStrategy.calculateFine(lateDays);
+                    System.out.println("❌ Late Return! Fine: " + fine);
+                } else {
+                    System.out.println("✅ Returned on time");
+                }
+
+                r.book.setAvailable(true);
+                records.remove(r);
+                return;
+            }
+        }
+    }
+
+    public void checkNotifications() {
+        for (Map.Entry<User, List<BorrowRecord>> entry : borrowMap.entrySet()) {
+            for (BorrowRecord r : entry.getValue()) {
+
+                long daysLeft = ChronoUnit.DAYS.between(LocalDate.now(), r.dueDate);
+
+                if (daysLeft == 2) {
+                    notifier.notifyUsers("⏰ Return '" + r.book.getTitle() + "' in 2 days!");
+                }
+
+                if (daysLeft < 0) {
+                    notifier.notifyUsers("⚠ Overdue! '" + r.book.getTitle() + "' late. Fine increasing!");
+                }
+            }
+        }
+    }
+}
+
+
+//MAIN
+
+public class Main {
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+        DatabaseConnection.getInstance();
+
+        LibrarySystem library = new LibrarySystem();
+
+        // Create Admin
+        Admin admin = new Admin("udoyrahul@gmail.com", "12345tras");
+        library.registerUser(admin);
+
+        // Add Books
+        admin.addBook(library, BookFactory.createBook("novel", "Math", 500));
+        admin.addBook(library, BookFactory.createBook("novel", "IQN OOP", 6000));
+
+        // Create User
+        User user = new User("rahularyan@gmail.com", "12345AR");
+        library.registerUser(user);
+
+        System.out.println("====== SMART LIBRARY SYSTEM ======");
+        System.out.println("1. User Login");
+        System.out.println("2. Admin Login");
+
+        int choice = sc.nextInt();
+        sc.nextLine();
+
+        System.out.print("Enter Gmail: ");
+        String email = sc.nextLine();
+
+        System.out.print("Enter Password: ");
+        String pass = sc.nextLine();
+
+        // USER LOGIN
+        if (choice == 1) {
+
+            LibraryProxy proxy = new LibraryProxy(user);
+
+            if (proxy.authenticate(email, pass)) {
+
+                System.out.println("\n👤 USER PANEL");
+
+                while (true) {
+                    System.out.println("\n1. View Books");
+                    System.out.println("2. Borrow Book");
+                    System.out.println("3. Return Book");
+                    System.out.println("4. Exit");
+
+                    int op = sc.nextInt();
+                    sc.nextLine();
+
+                    if (op == 1) {
+                        library.showAllBooks();
+                    } else if (op == 2) {
+                        System.out.print("Enter Book Name: ");
+                        String b = sc.nextLine();
+                        library.borrowBook(user, b);
+                    } else if (op == 3) {
+                        System.out.print("Enter Book Name: ");
+                        String b = sc.nextLine();
+                        library.returnBook(user, b);
+                    } else {
+                        break;
+                    }
+
+                    library.checkNotifications();
+                }
+            }
+        }
+
+        // ADMIN LOGIN
+        else if (choice == 2) {
+
+            LibraryProxy proxy = new LibraryProxy(admin);
+
+            if (proxy.authenticate(email, pass)) {
+
+                System.out.println("\n👑 ADMIN PANEL");
+
+                while (true) {
+                    System.out.println("\n1. Add Book");
+                    System.out.println("2. Remove Book");
+                    System.out.println("3. View All Books");
+                    System.out.println("4. View Users");
+                    System.out.println("5. Exit");
+
+                    int op = sc.nextInt();
+                    sc.nextLine();
+
+                    if (op == 1) {
+                        System.out.print("Enter Book Title: ");
+                        String title = sc.nextLine();
+
+                        System.out.print("Enter Price: ");
+                        double price = sc.nextDouble();
+                        sc.nextLine();
+
+                        admin.addBook(library,
+                                BookFactory.createBook("novel", title, price));
+
+                    } else if (op == 2) {
+                        System.out.print("Enter Book Title: ");
+                        String title = sc.nextLine();
+                        admin.removeBook(library, title);
+
+                    } else if (op == 3) {
+                        library.showAllBooks();
+
+                    } else if (op == 4) {
+                        admin.viewUsers(library);
+
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        else {
+            System.out.println("Invalid Option");
+        }
+        sc.close(); 
+    }
+}
