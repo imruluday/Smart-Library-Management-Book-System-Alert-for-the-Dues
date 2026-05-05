@@ -33,10 +33,8 @@ A special feature of this system is the **Due Alert Notification System**, which
 Email Notification for Due Dates
  Online Book Reservation
  Admin Dashboard
-
-## GitHub Repository
-
-## Final Project Report 
+ 
+ ## Final Project Report 
 Proposed Functional Requirements: 
 1. User Management: The system must allow administrators to register, update, and delete member and staff accounts. 
 2. Catalog Management: Librarians must be able to add, update, and remove library items (Books, Journals, DVDs). 
@@ -139,7 +137,10 @@ Sequence Diagram Match:
 •	Borrowing Process: The sequence diagram shows the Patron requesting a book through the System UI, which then communicates with an AuthProxy and InventoryMgr. 
 •	Changes:
 o	Proxy Logic: While the diagram depicts a separate AuthProxy object, the implementation shows role-based access checks (e.g., checking for "PREMIUM") directly within the Controller methods using the HttpSession. 
-o	Inventory Management: The "InventoryMgr" in the diagram is implemented via the itemRepository in the code. The code successfully follows the sequence of checking item availability, updating status to "Borrowed," and saving the transaction to the database. 
+o	Inventory Management: The "InventoryMgr" in the diagram is implemented via the itemRepository in the code. The code successfully follows the sequence of checking item availability, updating status to "Borrowed," and saving the transaction to the database.
+
+
+## GitHub Repository 
 
 
 https://github.com/imruluday/Smart-Library-Management-Book-System-Alert-for-the-Dues
