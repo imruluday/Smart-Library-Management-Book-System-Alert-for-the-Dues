@@ -34,7 +34,7 @@ Email Notification for Due Dates
  Online Book Reservation
  Admin Dashboard
 
-## GitHub Repository
+
 
 ## Final Project Report 
 Proposed Functional Requirements: 
@@ -141,5 +141,6 @@ Sequence Diagram Match:
 o	Proxy Logic: While the diagram depicts a separate AuthProxy object, the implementation shows role-based access checks (e.g., checking for "PREMIUM") directly within the Controller methods using the HttpSession. 
 o	Inventory Management: The "InventoryMgr" in the diagram is implemented via the itemRepository in the code. The code successfully follows the sequence of checking item availability, updating status to "Borrowed," and saving the transaction to the database. 
 
+## GitHub Repository
 
 https://github.com/imruluday/Smart-Library-Management-Book-System-Alert-for-the-Dues
